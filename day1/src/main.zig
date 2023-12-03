@@ -1,5 +1,6 @@
 const std = @import("std");
 const print = std.debug.print;
+const expectEqual = std.testing.expectEqual;
 
 pub fn main() !void {
     try part1();
@@ -64,4 +65,29 @@ pub fn part2() !void {
         sum += first*10+last;
     }
     print("{}\n", .{sum});
+}
+
+
+test "part 1" {
+    const input =
+        \\1abc2
+        \\pqr3stu8vwx
+        \\a1b2c3d4e5f
+        \\treb7uchet
+    ;
+    try expectEqual(@as(u32, 142), part1(input));
+}
+
+
+test "part 2" {
+    const input =
+        \\two1nine
+        \\eightwothree
+        \\abcone2threexyz
+        \\xtwone3four
+        \\4nineeightseven2
+        \\zoneight234
+        \\7pqrstsixteen
+    ;
+    try expectEqual(@as(u32, 281), part2(input));
 }
