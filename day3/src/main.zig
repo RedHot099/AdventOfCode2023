@@ -62,38 +62,87 @@ pub fn part1(input: []const u8) !u32 {
     return sum;
 }
 
-pub fn numberInStr(line: []const u8, star: usize) !u32 {
+pub fn findBefore(line: []const u8, star: usize) usize {
+    var is_digit: bool = false;
     var start: usize = 0;
-    var end: usize = 0;
-    var number: bool = false;
-    var post: bool = false;
-    // if (!std.ascii.isDigit(line[star - 1]) and !std.ascii.isDigit(line[star]) and !std.ascii.isDigit(line[star + 1])) {
-    //     return 1;
-    // }
-    for (line, 0..) |c, i| {
-        if (i == star) {
-            post = true;
-        }
-        // print("{s} | {c} - {} | {} -> {} - {} {}**{}**\n", .{ line[0..i], c, post, number, start, end, i, star });
+    for (line[0..star], 0..) |c, i| {
         switch (c) {
             '0'...'9' => {
-                if (!number) {
+                if (!is_digit) {
                     start = i;
-                    end = start + 1;
-                    number = true;
-                } else {
-                    end = i;
+                    is_digit = true;
                 }
             },
             else => {
-                if (!post) {
-                    number = false;
-                } else if (number) {
-                    if (!std.ascii.isDigit(line[end])) end -= 1;
-                    return try std.fmt.parseInt(u32, line[start .. end + 1], 10);
-                }
+                is_digit = false;
             },
         }
+    }
+    return start;
+}
+
+pub fn findAfter(line: []const u8, star: usize) usize {
+    var end: usize = 0;
+    for (line[star..], star..) |c, i| {
+        switch (c) {
+            '0'...'9' => {
+                end = i + 1;
+            },
+            else => {
+                return end;
+            },
+        }
+    }
+    return line.len - 1;
+}
+
+pub fn numberInStr(line: []const u8, star: usize) !u32 {
+    var start: usize = 0;
+    var end: usize = 0;
+    var left: bool = false;
+    var right: bool = false;
+    var center: bool = false;
+    //check if number on the left side of gear
+    if (star > 0) {
+        if (std.ascii.isDigit(line[star - 1])) left = true;
+    }
+    //check if number on the right side of gear
+    if (star < line.len) {
+        if (std.ascii.isDigit(line[star + 1])) right = true;
+    }
+    //check if gear above/belov gear
+    if (std.ascii.isDigit(line[star])) center = true;
+    // print("{s} - l{} | c{} | r{}\n", .{ line, left, center, right });
+    //if number above/below gear
+    if (center) {
+        //find begining before and end after
+        if (left and right) {
+            start = findBefore(line, star + 1);
+            end = findAfter(line, star + 1);
+            return try std.fmt.parseInt(u32, line[start..end], 10);
+        } //find begining before and ends above/below
+        else if (left) {
+            start = findBefore(line, star + 1);
+            return try std.fmt.parseInt(u32, line[start .. star + 1], 10);
+        } //begins above/belov find end after
+        else if (right) {
+            end = findAfter(line, star + 1);
+            return try std.fmt.parseInt(u32, line[star..end], 10);
+        } //just one digit above/below
+        else {
+            // print("Return one char:{c}:\n", .{line[star]});
+            return @as(u32, @intCast(line[star]));
+        }
+    }
+    //if number on the left find its beginning
+    if (left) {
+        start = findBefore(line, star);
+        return try std.fmt.parseInt(u32, line[start..star], 10);
+    }
+    //if number on the right find its end
+    if (right) {
+        end = findAfter(line, star + 1);
+        return try std.fmt.parseInt(u32, line[star + 1 .. end], 10);
     }
     return 1;
 }
@@ -110,47 +159,29 @@ pub fn part2(input: []const u8) !u32 {
             var ratio: u32 = 1;
             var tmp: u32 = 1;
             if (prev_line) |l| {
-                tmp = try numberInStr(l[0..i], i);
+                tmp = try numberInStr(l, i);
                 if (tmp > 1) {
-                    print("{}\n", .{tmp});
-                    ratio *= tmp;
-                    parts += 1;
-                }
-                tmp = try numberInStr(l[i .. l.len - 1], i);
-                if (tmp > 1) {
-                    print("{}\n", .{tmp});
+                    // print("{}\n", .{tmp});
                     ratio *= tmp;
                     parts += 1;
                 }
             }
-            tmp = try numberInStr(line[0..i], i);
+            tmp = try numberInStr(line, i);
             if (tmp > 1) {
-                print("{}\n", .{tmp});
-                ratio *= tmp;
-                parts += 1;
-            }
-            tmp = try numberInStr(line[i .. line.len - 1], i);
-            if (tmp > 1) {
-                print("{}\n", .{tmp});
+                // print("{}\n", .{tmp});
                 ratio *= tmp;
                 parts += 1;
             }
             if (next_line) |l| {
-                tmp = try numberInStr(l[0..i], i);
+                tmp = try numberInStr(l, i);
                 if (tmp > 1) {
-                    print("{}\n", .{tmp});
-                    ratio *= tmp;
-                    parts += 1;
-                }
-                tmp = try numberInStr(l[i .. l.len - 1], i);
-                if (tmp > 1) {
-                    print("{}\n", .{tmp});
+                    // print("{}\n", .{tmp});
                     ratio *= tmp;
                     parts += 1;
                 }
             }
             if (parts > 1) {
-                print("R{}\n", .{ratio});
+                // print("R{}\n", .{ratio});
                 sum += ratio;
             }
         }
